@@ -1,26 +1,279 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/* =====================================================================
+   Woxsen Champions League — design tokens
+   ---------------------------------------------------------------------
+   A floodlit pitch at night. Dark by default and not switchable: the link
+   is shared in WhatsApp groups and read on phones, often outdoors, so it is
+   tuned for contrast rather than for matching the reader's system theme.
+
+   Green is the pitch and carries every live/active state. Gold is reserved
+   strictly for winning — champions, qualification, top of the table — so
+   it never loses its meaning by being used as decoration.
+   ===================================================================== */
+@theme {
+  /* --- pitch green: primary, interactive, live --- */
+  --color-pitch: #2ee86a;
+  --color-pitch-bright: #7dffab;
+  --color-pitch-deep: #13a24a;
+  --color-pitch-dim: #125c31;
+  --color-pitch-glow: #2ee86a1f;
+
+  /* --- championship gold: winners only --- */
+  --color-gold: #ffc94a;
+  --color-gold-dim: #6b4e12;
+  --color-gold-glow: #ffc94a1a;
+
+  /* --- surfaces: stadium night --- */
+  --color-ink: #060c08;
+  --color-surface: #0d1611;
+  --color-surface-2: #131f18;
+  --color-surface-3: #1b2b21;
+  --color-line: #22352a;
+  --color-line-bright: #32503d;
+
+  /* --- text --- */
+  --color-chalk: #f1f7f2;
+  --color-muted: #8ea597;
+  --color-faint: #5d7366;
+
+  /* --- signals --- */
+  --color-live: #ff3b5c;
+  --color-yellow-card: #ffd43b;
+  --color-red-card: #ff4438;
+
+  /* Small phones (iPhone SE) get their own step so tables can drop a
+     column rather than scroll. */
+  --breakpoint-xs: 23rem;
+
+  --font-display: var(--font-bebas), "Arial Narrow", sans-serif;
+  --font-sans: var(--font-source-sans), ui-sans-serif, system-ui, sans-serif;
+
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-out-back: cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  background-color: var(--color-ink);
+  color-scheme: dark;
+  -webkit-text-size-adjust: 100%;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  /* Transparent on purpose: the pitch backdrop is a fixed element at
+     z-index -10, and an opaque body background would paint straight over
+     it. The ground colour lives on <html>, which fills the canvas. */
+  background-color: transparent;
+  color: var(--color-chalk);
+  font-family: var(--font-sans);
+  overscroll-behavior-y: none;
+}
+
+/* =====================================================================
+   Numerals
+   ---------------------------------------------------------------------
+   Every number that sits in a column -- scores, points, goal difference --
+   uses tabular figures so digits line up down the page and a 1 takes the
+   same width as an 8.
+   ===================================================================== */
+@utility tnum {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+}
+
+/** Condensed display face. Headlines and anything shouting. */
+@utility display {
+  font-family: var(--font-display);
+  font-weight: 400;
+  letter-spacing: 0.02em;
+  line-height: 0.95;
+}
+
+/** The loudest thing on the page: a scoreline. */
+@utility score {
+  font-family: var(--font-display);
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+  font-weight: 400;
+  letter-spacing: 0.01em;
+  line-height: 0.9;
+}
+
+/* Numbers inside data tables stay in the body face -- the condensed
+   display face is too tight to scan in an 8-column row. */
+@utility stat {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+/* =====================================================================
+   Layout helpers
+   ===================================================================== */
+
+/* Clears the fixed bottom tab bar, plus the iPhone home indicator.
+   Desktop keeps its nav in the header, so the padding is dropped there. */
+@utility pb-tabbar {
+  padding-bottom: calc(4.75rem + env(safe-area-inset-bottom, 0px));
+  @media (min-width: 1024px) {
+    padding-bottom: 3rem;
+  }
+}
+
+@utility safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* Horizontal scroll for wide content, without the page itself sliding. */
+@utility scroll-x {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-line-bright) transparent;
+}
+
+/* Frosted panel, used for anything floating above the pitch backdrop. */
+@utility glass {
+  background-color: color-mix(in srgb, var(--color-surface) 82%, transparent);
+  backdrop-filter: blur(12px) saturate(1.2);
+  -webkit-backdrop-filter: blur(12px) saturate(1.2);
+}
+
+/* =====================================================================
+   Motion
+   ---------------------------------------------------------------------
+   Everything below is CSS-only and runs on the compositor (transform and
+   opacity). Server-rendered content is visible without JavaScript: the
+   reveal animations start from a visible state and only *add* movement.
+   ===================================================================== */
+
+@keyframes rise-in {
+  from { opacity: 0; transform: translate3d(0, 14px, 0); }
+  to   { opacity: 1; transform: translate3d(0, 0, 0); }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes score-pop {
+  0%   { transform: scale(0.82); opacity: 0; }
+  60%  { transform: scale(1.06); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes pulse-live {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%      { opacity: 0.4; transform: scale(0.86); }
+}
+
+@keyframes ring-live {
+  0%   { box-shadow: 0 0 0 0 color-mix(in srgb, var(--color-live) 55%, transparent); }
+  70%  { box-shadow: 0 0 0 10px transparent; }
+  100% { box-shadow: 0 0 0 0 transparent; }
+}
+
+/* A floodlight sweeping slowly across the ground. */
+@keyframes floodlight {
+  0%   { transform: translate3d(-30%, 0, 0) rotate(8deg); opacity: 0.35; }
+  50%  { opacity: 0.6; }
+  100% { transform: translate3d(30%, 0, 0) rotate(8deg); opacity: 0.35; }
+}
+
+/* The ball, drifting. */
+@keyframes drift {
+  0%, 100% { transform: translate3d(0, 0, 0) rotate(0deg); }
+  50%      { transform: translate3d(0, -14px, 0) rotate(180deg); }
+}
+
+/* Gold shimmer, for a champion. */
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+/* Form pills and table rows arriving. */
+@utility animate-rise {
+  animation: rise-in 0.5s var(--ease-out-expo) both;
+}
+
+@utility animate-fade {
+  animation: fade-in 0.4s ease-out both;
+}
+
+@utility animate-score {
+  animation: score-pop 0.45s var(--ease-out-back) both;
+}
+
+@utility live-dot {
+  animation: pulse-live 1.5s ease-in-out infinite;
+}
+
+@utility live-ring {
+  animation: ring-live 2s ease-out infinite;
+}
+
+@utility animate-drift {
+  animation: drift 7s ease-in-out infinite;
+}
+
+@utility animate-floodlight {
+  animation: floodlight 14s ease-in-out infinite alternate;
+}
+
+@utility gold-shimmer {
+  background: linear-gradient(
+    100deg,
+    var(--color-gold) 20%,
+    #fff6d8 42%,
+    var(--color-gold) 64%
+  );
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: shimmer 3.5s linear infinite;
+}
+
+/* Stagger helper: `style={{ '--i': index }}` on a rising element. */
+@utility stagger {
+  animation-delay: calc(var(--i, 0) * 45ms);
+}
+
+/**
+ * One switch for everything above.
+ * Content is never hidden by an animation that does not run -- every
+ * reveal uses `both` fill from an invisible start, so this rule restores
+ * the final state rather than leaving anything blank.
+ */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    animation-delay: 0ms !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Keyboard focus stays visible everywhere. */
+:focus-visible {
+  outline: 2px solid var(--color-pitch);
+  outline-offset: 2px;
+  border-radius: 0.35rem;
+}
+
+::selection {
+  background: var(--color-pitch);
+  color: var(--color-ink);
+}
+
+/* Thin scrollbars that match the ground. */
+::-webkit-scrollbar { height: 6px; width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: var(--color-line-bright);
+  border-radius: 3px;
 }
