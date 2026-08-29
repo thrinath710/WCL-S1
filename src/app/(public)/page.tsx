@@ -8,6 +8,7 @@ import { STAGE_LABEL, type Match, type Team } from '@/lib/types';
 import { MatchCard, ResultChip } from '@/components/match-card';
 import { StandingsTable } from '@/components/standings-table';
 import type { Kit } from '@/lib/kit';
+import { WclIntro } from '@/components/wcl-intro';
 import { ScoreLine } from '@/components/score-display';
 import { LastUpdated } from '@/components/last-updated';
 import { Football } from '@/components/pitch-backdrop';
@@ -47,105 +48,111 @@ export default async function HomePage() {
   // skeleton of empty widgets.
   if (teams.length === 0 && matches.length === 0) {
     return (
-      <Page>
-        <Hero settings={settings} />
-        <EmptyState
-          title="The tournament has not started yet"
-          hint="Teams, fixtures and the league table will appear here as soon as the organisers publish them. Check back soon."
-        />
-        <LastUpdated at={fetchedAt} />
-      </Page>
+      <>
+        <WclIntro />
+        <Page>
+          <Hero settings={settings} />
+          <EmptyState
+            title="The tournament has not started yet"
+            hint="Teams, fixtures and the league table will appear here as soon as the organisers publish them. Check back soon."
+          />
+          <LastUpdated at={fetchedAt} />
+        </Page>
+      </>
     );
   }
 
   return (
-    <Page wide>
-      <Hero settings={settings} />
+    <>
+      <WclIntro />
+      <Page wide>
+        <Hero settings={settings} />
 
-      {headline ? <StatusStrip headline={headline} teams={teamIndex} /> : null}
+        {headline ? <StatusStrip headline={headline} teams={teamIndex} /> : null}
 
-      {/* Two columns on a laptop: the run of play on the left, the standings
-          and the scoring charts on the right. One column on a phone. */}
-      <div className="lg:grid lg:grid-cols-[1fr_20rem] lg:items-start lg:gap-7">
-        <div className="min-w-0">
-          {results.length > 0 ? (
-            <Section title="Latest results" action={<MoreLink href="/fixtures">All results</MoreLink>}>
-              <div className="scroll-x -mx-4 flex gap-2.5 px-4 pb-2 sm:-mx-6 sm:px-6">
-                {results.map((match, i) => (
-                  <ResultChip key={match.id} match={match} teams={teamIndex} index={i} />
-                ))}
-              </div>
-            </Section>
-          ) : null}
+        {/* Two columns on a laptop: the run of play on the left, the standings
+            and the scoring charts on the right. One column on a phone. */}
+        <div className="lg:grid lg:grid-cols-[1fr_20rem] lg:items-start lg:gap-7">
+          <div className="min-w-0">
+            {results.length > 0 ? (
+              <Section title="Latest results" action={<MoreLink href="/fixtures">All results</MoreLink>}>
+                <div className="scroll-x -mx-4 flex gap-2.5 px-4 pb-2 sm:-mx-6 sm:px-6">
+                  {results.map((match, i) => (
+                    <ResultChip key={match.id} match={match} teams={teamIndex} index={i} />
+                  ))}
+                </div>
+              </Section>
+            ) : null}
 
-          {upcoming.length > 0 ? (
-            <Section title="Next up" action={<MoreLink href="/fixtures">All fixtures</MoreLink>}>
-              <Panel className="overflow-hidden">
-                {upcoming.map((match, i) => (
-                  <MatchCard key={match.id} match={match} teams={teamIndex} showDate index={i} />
-                ))}
+            {upcoming.length > 0 ? (
+              <Section title="Next up" action={<MoreLink href="/fixtures">All fixtures</MoreLink>}>
+                <Panel className="overflow-hidden">
+                  {upcoming.map((match, i) => (
+                    <MatchCard key={match.id} match={match} teams={teamIndex} showDate index={i} />
+                  ))}
+                </Panel>
+              </Section>
+            ) : null}
+
+            {matches.length === 0 && teams.length > 0 ? (
+              <Section title="Fixtures">
+                <EmptyState
+                  title="No fixtures published yet"
+                  hint={`${teams.length} ${teams.length === 1 ? 'team has' : 'teams have'} registered. The schedule goes up once the groups are drawn.`}
+                  action={<ActionLink href="/teams" tone="ghost">See the teams</ActionLink>}
+                />
+              </Section>
+            ) : null}
+          </div>
+
+          <aside className="min-w-0">
+            {teams.length > 0 ? (
+              <Section title="Standings" action={<MoreLink href="/table">Full table</MoreLink>}>
+                <div className="space-y-3.5">
+                  {tables.map((table) => (
+                    <div key={table.groupName ?? 'all'}>
+                      {table.groupName ? (
+                        <p className="mb-1.5 text-[0.68rem] font-bold uppercase tracking-[0.12em] text-muted">
+                          Group {table.groupName}
+                        </p>
+                      ) : null}
+                      <StandingsTable table={table} condensed showForm={false} compact />
+                    </div>
+                  ))}
+                </div>
+              </Section>
+            ) : null}
+
+            {leader ? (
+              <Section title="Top scorer" action={<MoreLink href="/stats">All stats</MoreLink>}>
+                <Panel tone="gold" className="flex items-center gap-3 p-3.5">
+                  {leader.team ? <TeamCrest team={leader.team} size={42} /> : null}
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-base font-bold text-chalk">{leader.player.name}</p>
+                    <p className="truncate text-xs text-muted">{leader.team?.name}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="score text-4xl text-gold">{leader.goals}</p>
+                    <p className="text-[0.6rem] font-bold uppercase tracking-[0.1em] text-gold/70">
+                      {leader.goals === 1 ? 'goal' : 'goals'}
+                    </p>
+                  </div>
+                </Panel>
+              </Section>
+            ) : null}
+
+            {settings.prize_note ? (
+              <Panel tone="pitch" className="mb-7 flex gap-2.5 p-3.5">
+                <Football size={18} className="mt-0.5 shrink-0 text-pitch" />
+                <p className="text-xs leading-relaxed text-pitch-bright">{settings.prize_note}</p>
               </Panel>
-            </Section>
-          ) : null}
-
-          {matches.length === 0 && teams.length > 0 ? (
-            <Section title="Fixtures">
-              <EmptyState
-                title="No fixtures published yet"
-                hint={`${teams.length} ${teams.length === 1 ? 'team has' : 'teams have'} registered. The schedule goes up once the groups are drawn.`}
-                action={<ActionLink href="/teams" tone="ghost">See the teams</ActionLink>}
-              />
-            </Section>
-          ) : null}
+            ) : null}
+          </aside>
         </div>
 
-        <aside className="min-w-0">
-          {teams.length > 0 ? (
-            <Section title="Standings" action={<MoreLink href="/table">Full table</MoreLink>}>
-              <div className="space-y-3.5">
-                {tables.map((table) => (
-                  <div key={table.groupName ?? 'all'}>
-                    {table.groupName ? (
-                      <p className="mb-1.5 text-[0.68rem] font-bold uppercase tracking-[0.12em] text-muted">
-                        Group {table.groupName}
-                      </p>
-                    ) : null}
-                    <StandingsTable table={table} condensed showForm={false} compact />
-                  </div>
-                ))}
-              </div>
-            </Section>
-          ) : null}
-
-          {leader ? (
-            <Section title="Top scorer" action={<MoreLink href="/stats">All stats</MoreLink>}>
-              <Panel tone="gold" className="flex items-center gap-3 p-3.5">
-                {leader.team ? <TeamCrest team={leader.team} size={42} /> : null}
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-base font-bold text-chalk">{leader.player.name}</p>
-                  <p className="truncate text-xs text-muted">{leader.team?.name}</p>
-                </div>
-                <div className="text-right">
-                  <p className="score text-4xl text-gold">{leader.goals}</p>
-                  <p className="text-[0.6rem] font-bold uppercase tracking-[0.1em] text-gold/70">
-                    {leader.goals === 1 ? 'goal' : 'goals'}
-                  </p>
-                </div>
-              </Panel>
-            </Section>
-          ) : null}
-
-          {settings.prize_note ? (
-            <Panel tone="pitch" className="mb-7 flex gap-2.5 p-3.5">
-              <Football size={18} className="mt-0.5 shrink-0 text-pitch" />
-              <p className="text-xs leading-relaxed text-pitch-bright">{settings.prize_note}</p>
-            </Panel>
-          ) : null}
-        </aside>
-      </div>
-
-      <LastUpdated at={fetchedAt} />
-    </Page>
+        <LastUpdated at={fetchedAt} />
+      </Page>
+    </>
   );
 }
 
