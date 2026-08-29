@@ -338,30 +338,41 @@ body {
    animation starts -- and the figure lands half a body-width off centre.
 */
 @keyframes wcl-figure-in {
-  0%   { opacity: 0; transform: translate3d(-50%, 1.5%, 0); }
-  22%  { opacity: 1; transform: translate3d(-50%, 0, 0); }
-  62%  { opacity: 1; transform: translate3d(-50%, 0, 0); }
-  80%  { opacity: 0; transform: translate3d(-50%, 0, 0); }
-  100% { opacity: 0; transform: translate3d(-50%, 0, 0); }
+  0%   { opacity: 0; transform: translate3d(-70%, 1.5%, 0); }
+  16%  { opacity: 1; transform: translate3d(-70%, 0, 0); }
+  62%  { opacity: 1; transform: translate3d(-70%, 0, 0); }
+  80%  { opacity: 0; transform: translate3d(-70%, 0, 0); }
+  100% { opacity: 0; transform: translate3d(-70%, 0, 0); }
 }
 
 /* The kicking leg: drawn back, then through the ball. */
+/*
+   The volley.
+
+   The leg is drawn hanging from the hip, so these are angles off vertical.
+   They are negative because the figure faces right and SVG rotates clockwise:
+   a positive angle would throw the boot out behind him. It cocks back under
+   the body, swings through about ninety degrees to meet the ball at hip
+   height, and carries on past it. Contact is at 20%, where the flash, the
+   recoil and the ball's own timeline all meet.
+*/
 @keyframes wcl-leg {
-  0%   { transform: rotate(4deg); }
-  12%  { transform: rotate(-26deg); }
-  21%  { transform: rotate(30deg); }
-  30%  { transform: rotate(20deg); }
-  55%  { transform: rotate(6deg); }
-  100% { transform: rotate(5deg); }
+  0%   { transform: rotate(16deg); }
+  10%  { transform: rotate(40deg); }
+  20%  { transform: rotate(-74deg); }
+  26%  { transform: rotate(-94deg); }
+  45%  { transform: rotate(-64deg); }
+  100% { transform: rotate(-60deg); }
 }
 
 /* The body leaning into the strike and settling. */
 @keyframes wcl-torso {
-  0%   { transform: rotate(0deg); }
-  12%  { transform: rotate(3.5deg); }
-  21%  { transform: rotate(-5deg); }
-  40%  { transform: rotate(1deg); }
-  100% { transform: rotate(0deg); }
+  0%   { transform: rotate(1deg); }
+  10%  { transform: rotate(4deg); }
+  20%  { transform: rotate(-13deg); }
+  30%  { transform: rotate(-10deg); }
+  60%  { transform: rotate(-3deg); }
+  100% { transform: rotate(-2deg); }
 }
 
 @keyframes wcl-flash {
@@ -380,15 +391,20 @@ body {
    something simply getting bigger.
 */
 @keyframes wcl-ball-fly {
-  0%, 20%  { opacity: 0; transform: translate3d(0, 0, 0) scale(0.05); }
-  21%      { opacity: 1; transform: translate3d(0, 0, 0) scale(0.055); }
+  /* Dropping in from over the striker's shoulder... */
+  0%       { opacity: 0; transform: translate3d(calc(0.26 * var(--wcl-fig)), calc(-0.8 * var(--wcl-fig)), 0) scale(0.1); }
+  5%       { opacity: 1; transform: translate3d(calc(0.2 * var(--wcl-fig)), calc(-0.58 * var(--wcl-fig)), 0) scale(0.12); }
+  13%      { transform: translate3d(calc(0.1 * var(--wcl-fig)), calc(-0.26 * var(--wcl-fig)), 0) scale(0.15); }
+  /* ...met at hip height, and gone. */
+  20%      { opacity: 1; transform: translate3d(0, 0, 0) scale(0.18); }
+  24%      { transform: translate3d(calc(-0.03 * var(--wcl-fig)), -2vh, 0) scale(0.32); }
   /* The rise is in vh, not vmin: the ball starts at the striker's feet and
      has to arrive centred on the frame, and that distance is a share of the
      viewport's height rather than of its shorter side. */
-  45%      { transform: translate3d(0, -6vh, 0) scale(0.55); }
-  70%      { transform: translate3d(0, -15vh, 0) scale(3.6); }
-  88%      { transform: translate3d(0, -23vh, 0) scale(16); }
-  100%     { opacity: 1; transform: translate3d(0, -28vh, 0) scale(34); }
+  45%      { transform: translate3d(calc(-0.09 * var(--wcl-fig)), -8vh, 0) scale(0.8); }
+  70%      { transform: translate3d(calc(-0.16 * var(--wcl-fig)), -16vh, 0) scale(4.2); }
+  88%      { transform: translate3d(calc(-0.2 * var(--wcl-fig)), -22vh, 0) scale(16); }
+  100%     { opacity: 1; transform: translate3d(calc(-0.215 * var(--wcl-fig)), -25vh, 0) scale(34); }
 }
 
 @keyframes wcl-ball-spin {
@@ -407,10 +423,10 @@ body {
 
 /* The trail the ball drags out of the dark behind it. */
 @keyframes wcl-trail {
-  0%, 21% { opacity: 0; transform: translate3d(0, 0, 0) scale(0.2); }
-  40%     { opacity: 0.45; transform: translate3d(0, -6vh, 0) scale(1.1); }
-  72%     { opacity: 0.28; transform: translate3d(0, -15vh, 0) scale(2.4); }
-  100%    { opacity: 0; transform: translate3d(0, -24vh, 0) scale(4); }
+  0%, 20% { opacity: 0; transform: translate3d(0, 0, 0) scale(0.2); }
+  40%     { opacity: 0.45; transform: translate3d(calc(-0.09 * var(--wcl-fig)), -8vh, 0) scale(1.1); }
+  72%     { opacity: 0.28; transform: translate3d(calc(-0.16 * var(--wcl-fig)), -16vh, 0) scale(2.4); }
+  100%    { opacity: 0; transform: translate3d(calc(-0.215 * var(--wcl-fig)), -24vh, 0) scale(4); }
 }
 
 /* Ball fills the frame -> the site's own deep green takes over. */
@@ -420,7 +436,21 @@ body {
   100%    { opacity: 1; }
 }
 
+/*
+   The strike point is derived, not typed in.
+
+   The figure is a square SVG sized in vmin, so the boot arrives at a fixed
+   fraction of that box: 0.915 across and 0.631 down, which falls straight out
+   of the hip position and the swing angle. Anchoring the ball to those
+   fractions keeps boot and ball together on any screen -- hand-tuned
+   percentages held on a phone and drifted apart on a laptop, because the
+   figure is measured in vmin and `bottom` in viewport height.
+*/
 .wcl-intro {
+  --wcl-fig: 54vmin;          /* figure width, and height: the viewBox is square */
+  --wcl-fig-bottom: 21%;      /* where the figure stands */
+  --wcl-strike-x: calc(50% + 0.215 * var(--wcl-fig));
+  --wcl-strike-y: calc(var(--wcl-fig-bottom) + 0.369 * var(--wcl-fig));
   position: fixed;
   inset: 0;
   z-index: 90;
@@ -550,9 +580,8 @@ body:has(.wcl-intro) .animate-score {
 .wcl-intro__figure {
   position: absolute;
   left: 50%;
-  bottom: 24%;
-  width: 34vmin;
-  max-width: 205px;
+  bottom: var(--wcl-fig-bottom);
+  width: var(--wcl-fig);
   height: auto;
   animation: wcl-figure-in var(--wcl-intro-dur) var(--ease-out-expo) both;
   will-change: opacity, transform;
@@ -560,23 +589,27 @@ body:has(.wcl-intro) .animate-score {
 
 .wcl-intro__torso {
   transform-box: view-box;
-  transform-origin: 120px 160px;
+  transform-origin: 148px 168px;
   animation: wcl-torso var(--wcl-intro-dur) cubic-bezier(0.3, 0, 0.2, 1) both;
+}
+
+.wcl-intro__stand {
+  transform-box: view-box;
 }
 
 .wcl-intro__leg {
   transform-box: view-box;
-  transform-origin: 126px 156px;
+  transform-origin: 160px 164px;
   animation: wcl-leg var(--wcl-intro-dur) cubic-bezier(0.22, 0.9, 0.2, 1) both;
 }
 
 .wcl-intro__flash {
   position: absolute;
-  left: 50%;
-  bottom: 24%;
-  width: 40vmin;
-  height: 40vmin;
-  transform: translate(-50%, 30%);
+  left: var(--wcl-strike-x);
+  bottom: calc(var(--wcl-strike-y) - 19vmin);
+  width: 38vmin;
+  height: 38vmin;
+  margin-left: -19vmin;
   background: radial-gradient(
     50% 50% at 50% 50%,
     color-mix(in srgb, var(--color-pitch-bright) 55%, transparent) 0%,
@@ -588,12 +621,11 @@ body:has(.wcl-intro) .animate-score {
 
 .wcl-intro__ball {
   position: absolute;
-  left: 50%;
-  bottom: 21.5%;
-  width: 15vmin;
-  max-width: 98px;
+  left: var(--wcl-strike-x);
+  bottom: calc(var(--wcl-strike-y) - 6.5vmin);
+  width: 13vmin;
   aspect-ratio: 1;
-  margin-left: -7.5vmin;
+  margin-left: -6.5vmin;
   transform-origin: 50% 50%;
   animation: wcl-ball-fly var(--wcl-intro-dur) cubic-bezier(0.5, 0, 0.78, 0.36) both;
   will-change: transform;
@@ -610,11 +642,11 @@ body:has(.wcl-intro) .animate-score {
 
 .wcl-intro__trail {
   position: absolute;
-  left: 50%;
-  bottom: 22%;
-  width: 26vmin;
-  height: 26vmin;
-  margin-left: -13vmin;
+  left: var(--wcl-strike-x);
+  bottom: calc(var(--wcl-strike-y) - 12vmin);
+  width: 24vmin;
+  height: 24vmin;
+  margin-left: -12vmin;
   transform-origin: 50% 50%;
   background: radial-gradient(
     50% 50% at 50% 50%,
@@ -633,8 +665,7 @@ body:has(.wcl-intro) .animate-score {
 
 /* A phone does not need the widest floodlights or the biggest blur. */
 @media (max-width: 30rem) {
-  .wcl-intro__figure { width: 44vmin; max-width: none; }
-  .wcl-intro__ball   { width: 17vmin; max-width: none; margin-left: -8.5vmin; }
+  .wcl-intro { --wcl-fig: 62vmin; --wcl-fig-bottom: 23%; }
 }
 
 /*

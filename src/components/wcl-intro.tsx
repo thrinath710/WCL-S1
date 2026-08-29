@@ -123,38 +123,55 @@ export function WclIntro() {
  */
 function Striker() {
   return (
-    <svg className="wcl-intro__figure" viewBox="0 0 240 300" fill="none" role="presentation">
-      {/* Contact with the ground. Without it the figure hovers. */}
-      <ellipse cx="120" cy="288" rx="56" ry="9" fill="#000" opacity="0.55" />
+    <svg className="wcl-intro__figure" viewBox="0 0 320 320" fill="none" role="presentation">
+      {/* Contact with the ground, under the standing foot rather than centred. */}
+      <ellipse cx="128" cy="304" rx="50" ry="7" fill="#000" opacity="0.5" />
 
-      <g className="wcl-intro__torso" fill="#020604">
-        {/* Head and neck. */}
-        <circle cx="120" cy="50" r="16" />
-        <path d="M112 63 h16 v13 h-16 z" />
-
-        {/* Shoulders down to the hips, squared to the camera. */}
-        <path
-          d="M120 72
-             c14 0 26 5 31 13
-             c4 20 4 43 1 65
-             l-7 8 h-50 l-7 -8
-             c-3 -22 -3 -45 1 -65
-             c5 -8 17 -13 31 -13 z"
-        />
-
-        {/* Arms, opening out as the body braces for the strike. */}
-        <path d="M92 84 c-14 8 -23 24 -25 43 l12 3 c2 -14 8 -25 19 -32 z" />
-        <path d="M148 84 c14 8 23 24 25 43 l-12 3 c-2 -14 -8 -25 -19 -32 z" />
-
-        {/* Standing leg, taking the weight, with the boot flat. */}
-        <path d="M100 154 l22 2 -4 56 2 60 -22 1 -3 -60 z" />
-        <path d="M97 271 h24 l3 14 -33 1 z" />
+      {/* The planted leg carries the weight and does not move with the swing. */}
+      <g className="wcl-intro__stand" fill="#020604">
+        <path d="M112 156 h34 l-5 40 -6 44 3 46 -27 1 -3 -47 6 -44 z" />
+        <path d="M106 286 h30 l17 12 v7 h-49 z" />
       </g>
 
+      <g className="wcl-intro__torso" fill="#020604">
+        {/* Head in profile, chin lifted, watching the ball down onto the boot. */}
+        <circle cx="152" cy="52" r="17" />
+        <path d="M144 68 h17 v15 h-17 z" />
+
+        {/* Shoulders to a narrow waist. The taper is what reads as an athlete
+            rather than a doll once the whole thing is one flat colour. */}
+        <path
+          d="M128 98
+             c4 -15 15 -24 30 -24
+             c16 0 27 10 30 26
+             c3 15 2 30 -3 44
+             l-3 22
+             l-42 2
+             l-4 -25
+             c-7 -14 -10 -30 -8 -45 z"
+        />
+
+        {/* Arms, both swept back to counter the leg going forward -- which is
+            what a body actually does through a volley. Each is an upper arm
+            and a forearm meeting at an elbow: a single curved sliver reads as
+            a hook once everything is one flat colour, two tapered lengths
+            read as a limb. */}
+        <g opacity="0.6">
+          {/* Far arm, lower and behind. */}
+          <path d="M140 116 l-34 10 5 18 34 -10 z" />
+          <path d="M107 126 l-22 16 11 15 22 -16 z" />
+        </g>
+
+        {/* Near arm, thrown back and up at shoulder height. */}
+        <path d="M176 100 l-36 -6 -3 18 36 6 z" />
+        <path d="M141 94 l-26 -20 -11 14 26 20 z" />
+      </g>
+
+      {/* The volleying leg: thigh, shin and boot, swung about the hip. */}
       <g className="wcl-intro__leg" fill="#020604">
-        {/* The kicking leg, swung about the hip and through the ball. */}
-        <path d="M124 152 l22 2 4 56 6 46 -22 3 -8 -47 z" />
-        <path d="M133 254 l24 2 4 15 -30 -2 z" />
+        <path d="M146 156 h32 l3 38 -4 30 -28 3 -5 -34 z" />
+        <path d="M149 224 h30 l5 38 5 26 -26 4 -8 -28 z" />
+        <path d="M155 288 h28 l21 9 1 12 -48 2 z" />
       </g>
     </svg>
   );
