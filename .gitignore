@@ -41,3 +41,7 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Source clips live in docs/ for reference; the one the site serves is
+# public/wcl-intro.mp4. Committing both would double a 3MB binary.
+docs/*.mp4

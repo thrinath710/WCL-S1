@@ -1,6 +1,7 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { animate } from 'motion';
 
 /**
  * The opening titles.
@@ -34,10 +35,38 @@ import { useEffect, useState } from 'react';
  * the visitor had left the site altogether, and that is a fresh arrival.
  */
 
-/** Length of the titles. Kept in step with --wcl-intro-dur below. */
-const INTRO_MS = 2800;
+/**
+ * How the titles are played.
+ *
+ * `film` is the rendered clip; `motion` is the drawn ball, kept as the
+ * fallback rather than deleted. A video is the one part of this that can
+ * simply refuse -- autoplay blocked, codec unsupported, the file still in
+ * flight on a bad connection -- and an opening title that sometimes shows
+ * nothing is worse than one that is never quite as pretty.
+ */
+type Mode = 'film' | 'motion';
+
+/**
+ * How long each opening runs.
+ *
+ * The clip is played to fit `film` rather than at a fixed multiplier: the
+ * rate is worked out from the file's own duration when its metadata lands,
+ * so swapping the source for a longer or shorter one still gives two seconds
+ * and nothing has to be edited here.
+ */
+const LENGTH_MS: Record<Mode, number> = { film: 2000, motion: 1050 };
 
 let playedInThisDocument = false;
+
+/**
+ * The key that keeps it to once a visit.
+ *
+ * Set from the inline script below rather than from React, because the
+ * decision has to be made before the overlay paints: on the refreshes that
+ * skip it, waiting for hydration would show a frame of the titles and then
+ * snatch them away.
+ */
+const SEEN_KEY = 'wcl:intro-seen';
 
 function documentWasLoadedOnHome(): boolean {
   const [nav] = performance.getEntriesByType('navigation') as PerformanceNavigationTiming[];
@@ -50,6 +79,20 @@ function documentWasLoadedOnHome(): boolean {
 }
 
 export function WclIntro() {
+  const [mode, setMode] = useState<Mode>('film');
+  /**
+   * Whether the opening has actually started.
+   *
+   * The drawn version starts the instant it is painted. A clip cannot: it has
+   * megabytes to fetch and decode first, and the overlay's own clock was
+   * running the whole time -- so on anything but a warm cache the titles were
+   * torn down while the video was still a second from the end. Nothing runs
+   * until this is true, and for film it is the `playing` event that sets it.
+   */
+  const [rolling, setRolling] = useState(false);
+  const started = mode === 'motion' || rolling;
+  const INTRO_MS = LENGTH_MS[mode];
+
   const [showing, setShowing] = useState(() => {
     // On the server the overlay is always written into the HTML, so a fresh
     // load paints the titles rather than a frame of Home underneath them.
@@ -74,106 +117,192 @@ export function WclIntro() {
     // nothing is listening, and the overlay would sit there for good holding
     // the scroll lock. This clears it either way.
     const reduced = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
-    const timer = window.setTimeout(() => setShowing(false), reduced ? 0 : INTRO_MS + 200);
+    // `__wclIntroSeen` is set by the inline script when it has already played
+    // in this tab. The markup still matches the server -- the stylesheet has
+    // hidden it -- so this only has to take it back out of the DOM.
+    const seen = Boolean((window as unknown as { __wclIntroSeen?: number }).__wclIntroSeen);
+    if (reduced || seen) {
+      const now = window.setTimeout(() => setShowing(false), 0);
+      return () => window.clearTimeout(now);
+    }
+    if (!started) return;      // the clip has not rolled yet; the clock waits
+
+    // Enough slack that the clip's own `ended` normally wins the race; this
+    // is only here for the case where it never arrives.
+    const timer = window.setTimeout(() => setShowing(false), INTRO_MS + 260);
     return () => window.clearTimeout(timer);
-  }, [showing]);
+  }, [showing, started, INTRO_MS]);
+
+  // The recoil is a spring, so it overshoots and settles the way a camera on a
+  // shoulder does. CSS easing cannot do that, which is the one thing here
+  // worth reaching for Motion over keyframes for. It sits on its own element
+  // so it never fights the CSS transform on the shake layer, and it fires from
+  // the same 20% mark the strike lands on.
+  const root = useRef<HTMLDivElement>(null);
+  const recoil = useRef<HTMLDivElement>(null);
+
+  // The frame taking the hit, driven by Motion.
+  //
+  // Two things had to be right before this did anything at all:
+  //
+  //   * A spring has one target, so a three-value list like [1, 1.05, 1]
+  //     collapses to the last value and animates nothing. A two-value list is
+  //     a from/to, which it does handle -- and it has to be one call, because
+  //     Motion batches its writes to the next frame, so a separate "displace"
+  //     call first would leave the spring reading the old value in the same
+  //     tick and travelling from 1 to 1.
+  //
+  //   * The timing comes off the CSS clock, not off this effect. The
+  //     stylesheet starts at first paint; hydration can be a few hundred
+  //     milliseconds behind it on a phone, and scheduling from here fired the
+  //     recoil long after the ball had already hit.
+  //
+  // The overshoot and settle is the whole reason to reach for Motion here.
+  // CSS easing cannot express it.
+  useEffect(() => {
+    if (mode !== 'motion') return;          // the clip carries its own impact
+    if (!showing || !recoil.current || !root.current) return;
+    if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
+
+    const el = recoil.current;
+    const [timeline] = root.current.getAnimations();
+    const elapsed = typeof timeline?.currentTime === 'number' ? timeline.currentTime : 0;
+    const contact = INTRO_MS * 0.74;   // the ball reaching the lens
+    if (elapsed > contact + 150) return;      // hydrated late; the moment has gone
+
+    const at = window.setTimeout(() => {
+      animate(
+        el,
+        { scale: [1.08, 1], rotate: [-1.1, 0] },
+        { type: 'spring', stiffness: 480, damping: 13, mass: 0.9 },
+      );
+    }, Math.max(0, contact - elapsed));
+    return () => window.clearTimeout(at);
+  }, [showing, mode, INTRO_MS]);
+
+  /*
+   * Speed, set from script.
+   *
+   * `playbackRate` has no HTML attribute, and several browsers reset it when
+   * an element loads new metadata, so it is applied on mount and again on
+   * every loadedmetadata rather than once. The figure is derived from the
+   * file rather than fixed, so the opening is two seconds whatever the source
+   * happens to be.
+   */
+  const film = useRef<HTMLVideoElement>(null);
+  useEffect(() => {
+    if (mode !== 'film' || !showing) return;
+    const el = film.current;
+    if (!el) return;
+
+    const fit = () => {
+      const seconds = LENGTH_MS.film / 1000;
+      if (Number.isFinite(el.duration) && el.duration > 0) {
+        el.playbackRate = el.duration / seconds;
+      }
+    };
+    fit();
+    el.addEventListener('loadedmetadata', fit);
+
+    const roll = () => { fit(); setRolling(true); };
+    el.addEventListener('playing', roll);
+
+    // Autoplay can be refused outright; if it is, fall back rather than
+    // sitting on a black rectangle.
+    void el.play?.().catch(() => setMode('motion'));
+
+    // And if it simply never gets going -- a slow connection, a codec the
+    // browser will not take -- do not hold the page behind a black screen.
+    const patience = window.setTimeout(() => {
+      if (el.paused || el.currentTime === 0) setMode('motion');
+    }, 1400);
+
+    return () => {
+      el.removeEventListener('loadedmetadata', fit);
+      el.removeEventListener('playing', roll);
+      window.clearTimeout(patience);
+    };
+  }, [mode, showing]);
 
   if (!showing) return null;
 
   return (
     <div
+      ref={root}
       className="wcl-intro"
       aria-hidden="true"
-      // The whole overlay carries one animation whose only job is to fade the
-      // titles out at the end; when it finishes, the titles are over.
+      data-mode={mode}
+      data-rolling={started ? '' : undefined}
       onAnimationEnd={(event) => {
         if (event.animationName.startsWith('wcl-intro-out')) setShowing(false);
       }}
       style={{ ['--wcl-intro-dur' as string]: `${INTRO_MS}ms` }}
     >
-      <div className="wcl-intro__shake">
-        <div className="wcl-intro__scene">
-          <div className="wcl-intro__sky" />
-          <div className="wcl-intro__stripes" />
-          <div className="wcl-intro__ground" />
-          <div className="wcl-intro__flood wcl-intro__flood--l" />
-          <div className="wcl-intro__flood wcl-intro__flood--r" />
-          <div className="wcl-intro__backlight" />
-          <Striker />
-          <div className="wcl-intro__flash" />
-        </div>
+      {/*
+        A way out that does not need the bundle.
+        
+        Everything else here is React: the clip's own `ended`, the backstop
+        timer, the fallback to the drawn version -- all of it waits for
+        hydration. On a bad enough connection hydration is tens of seconds
+        away, and until then this overlay is an opaque sheet over the whole
+        page. Measured at 40kbps it never lifted at all.
+        
+        This runs the moment the parser reaches it, long before any bundle,
+        and marks the overlay expired if it is somehow still up after three
+        and a half seconds. It only sets an attribute -- removing the node
+        would leave React trying to unmount a child that is no longer there.
+      */}
+      <script
+        dangerouslySetInnerHTML={{
+          __html:
+            '(function(){var s=document.currentScript,o=s&&s.parentNode;if(!o)return;' +
+            // once a visit: if it has already run in this tab, hide it now
+            'try{if(sessionStorage.getItem(' + JSON.stringify(SEEN_KEY) + ')){' +
+            'o.setAttribute("data-seen","");window.__wclIntroSeen=1;return}' +
+            'sessionStorage.setItem(' + JSON.stringify(SEEN_KEY) + ',"1")}catch(e){}' +
+            // and never let it hold the page, whatever happens to the bundle
+            'setTimeout(function(){' +
+            'if(o.isConnected)o.setAttribute("data-expired","")},3500)})()',
+        }}
+      />
 
-        <div className="wcl-intro__trail" />
-        <div className="wcl-intro__ball">
-          <Ball />
+      {mode === 'film' ? (
+        <video
+          ref={film}
+          className="wcl-intro__film"
+          src="/wcl-intro.mp4"
+          autoPlay
+          muted
+          playsInline
+          preload="auto"
+          disablePictureInPicture
+          onEnded={() => setShowing(false)}
+          onError={() => setMode('motion')}
+          onStalled={() => setMode('motion')}
+        />
+      ) : (
+        <div className="wcl-intro__recoil" ref={recoil}>
+          <div className="wcl-intro__shake">
+            <div className="wcl-intro__scene">
+              <div className="wcl-intro__sky" />
+              <div className="wcl-intro__stripes" />
+              <div className="wcl-intro__ground" />
+              <div className="wcl-intro__flood wcl-intro__flood--l" />
+              <div className="wcl-intro__flood wcl-intro__flood--r" />
+              <div className="wcl-intro__backlight" />
+            </div>
+
+            <div className="wcl-intro__trail" />
+            <div className="wcl-intro__ball">
+              <Ball />
+            </div>
+            <div className="wcl-intro__flash" />
+          </div>
         </div>
-      </div>
+      )}
 
       <div className="wcl-intro__wash" />
     </div>
-  );
-}
-
-/**
- * The figure, as a silhouette read against the floodlights.
- *
- * The kicking leg is a separate path rotated about the hip rather than a
- * second drawing cross-faded in: one rotation animates on the compositor, and
- * swinging through the ball is what a kick actually looks like.
- */
-function Striker() {
-  return (
-    <svg className="wcl-intro__figure" viewBox="0 0 320 320" fill="none" role="presentation">
-      {/* Contact with the ground, under the standing foot rather than centred. */}
-      <ellipse cx="128" cy="304" rx="50" ry="7" fill="#000" opacity="0.5" />
-
-      {/* The planted leg carries the weight and does not move with the swing. */}
-      <g className="wcl-intro__stand" fill="#020604">
-        <path d="M112 156 h34 l-5 40 -6 44 3 46 -27 1 -3 -47 6 -44 z" />
-        <path d="M106 286 h30 l17 12 v7 h-49 z" />
-      </g>
-
-      <g className="wcl-intro__torso" fill="#020604">
-        {/* Head in profile, chin lifted, watching the ball down onto the boot. */}
-        <circle cx="152" cy="52" r="17" />
-        <path d="M144 68 h17 v15 h-17 z" />
-
-        {/* Shoulders to a narrow waist. The taper is what reads as an athlete
-            rather than a doll once the whole thing is one flat colour. */}
-        <path
-          d="M128 98
-             c4 -15 15 -24 30 -24
-             c16 0 27 10 30 26
-             c3 15 2 30 -3 44
-             l-3 22
-             l-42 2
-             l-4 -25
-             c-7 -14 -10 -30 -8 -45 z"
-        />
-
-        {/* Arms, both swept back to counter the leg going forward -- which is
-            what a body actually does through a volley. Each is an upper arm
-            and a forearm meeting at an elbow: a single curved sliver reads as
-            a hook once everything is one flat colour, two tapered lengths
-            read as a limb. */}
-        <g opacity="0.6">
-          {/* Far arm, lower and behind. */}
-          <path d="M140 116 l-34 10 5 18 34 -10 z" />
-          <path d="M107 126 l-22 16 11 15 22 -16 z" />
-        </g>
-
-        {/* Near arm, thrown back and up at shoulder height. */}
-        <path d="M176 100 l-36 -6 -3 18 36 6 z" />
-        <path d="M141 94 l-26 -20 -11 14 26 20 z" />
-      </g>
-
-      {/* The volleying leg: thigh, shin and boot, swung about the hip. */}
-      <g className="wcl-intro__leg" fill="#020604">
-        <path d="M146 156 h32 l3 38 -4 30 -28 3 -5 -34 z" />
-        <path d="M149 224 h30 l5 38 5 26 -26 4 -8 -28 z" />
-        <path d="M155 288 h28 l21 9 1 12 -48 2 z" />
-      </g>
-    </svg>
   );
 }
 

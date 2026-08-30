@@ -281,176 +281,42 @@ body {
 /* =====================================================================
    Opening titles
    ---------------------------------------------------------------------
-   A floodlit pitch, a silhouette striking the ball, and the ball filling
-   the screen into the deep green the site already sits on.
+   A ball out of the dark, straight down the lens, and the impact carries
+   the page in. It is over in about a second: the clock was halved and the
+   approach steepened on top of that, so the ball arrives at 74% of a much
+   shorter timeline rather than 82% of a long one.
 
-   It runs once per document, only when the Home page itself was the page
-   loaded from the URL -- the decision lives in components/wcl-intro.tsx,
-   because it depends on how the document was navigated to, which CSS
-   cannot see.
+   There was a striker here through several passes -- traced from a logo,
+   rigged, re-rigged, mirrored -- and none of it read. The kick and the
+   flight could be made to agree geometrically and still look staged,
+   because the one thing a two-second title sequence cannot afford is a
+   figure the eye has time to argue with. Without him the shot is simply
+   a shot: the ball is the subject, it is coming at you, and the moment it
+   arrives you are on the page.
 
-   Everything here animates transform and opacity so it stays on the
-   compositor. The one filter is a short, small blur on the ball while it
-   is travelling fastest, which is what sells the speed; it is gone by the
-   time the ball is large enough for the blur to cost anything.
+   Everything animates transform and opacity so it stays on the compositor.
+   The one filter is a short blur while the ball is travelling fastest,
+   which is what sells the speed, and it is gone before the ball is large
+   enough for it to cost anything.
    ===================================================================== */
 
-@keyframes wcl-intro-out {
-  0%, 92% { opacity: 1; }
-  100%    { opacity: 0; }
-}
-
-/* The camera creeping forward before the strike. */
-@keyframes wcl-scene-push {
-  0%   { transform: scale(1.005); }
-  100% { transform: scale(1.07); }
-}
-
-/* Boot meets ball: two frames of recoil, no more. */
-@keyframes wcl-shake {
-  0%, 20%      { transform: translate3d(0, 0, 0); }
-  22%          { transform: translate3d(-0.5%, 0.7%, 0); }
-  25%          { transform: translate3d(0.45%, -0.5%, 0); }
-  28%          { transform: translate3d(-0.2%, 0.25%, 0); }
-  32%, 100%    { transform: translate3d(0, 0, 0); }
-}
-
-@keyframes wcl-atmos-in {
-  0%   { opacity: 0; }
-  30%  { opacity: 1; }
-  100% { opacity: 1; }
-}
-
-/* Floodlights finding their level, then blowing out on impact. */
-@keyframes wcl-flood {
-  0%       { opacity: 0; }
-  35%      { opacity: 0.5; }
-  21%      { opacity: 0.5; }
-  24%      { opacity: 0.78; }
-  60%      { opacity: 0.42; }
-  100%     { opacity: 0; }
-}
-
 /*
-   The centring lives in the keyframes, not in a static `transform` on the
-   element: an animated transform replaces the declared one outright, so a
-   `translateX(-50%)` sitting in the rule is simply dropped the moment the
-   animation starts -- and the figure lands half a body-width off centre.
+   Nothing moves until the opening has actually started.
+
+   For the drawn version that is immediately. For the clip it is the moment it
+   begins playing: the stylesheet's clock starts at first paint, and a video
+   does not, so without this the wash and the fade ran while the file was
+   still downloading and the titles were pulled down mid-shot.
 */
-@keyframes wcl-figure-in {
-  0%   { opacity: 0; transform: translate3d(-70%, 1.5%, 0); }
-  16%  { opacity: 1; transform: translate3d(-70%, 0, 0); }
-  62%  { opacity: 1; transform: translate3d(-70%, 0, 0); }
-  80%  { opacity: 0; transform: translate3d(-70%, 0, 0); }
-  100% { opacity: 0; transform: translate3d(-70%, 0, 0); }
+.wcl-intro[data-mode='film']:not([data-rolling]),
+.wcl-intro[data-mode='film']:not([data-rolling]) .wcl-intro__wash {
+  animation-play-state: paused;
 }
 
-/* The kicking leg: drawn back, then through the ball. */
-/*
-   The volley.
-
-   The leg is drawn hanging from the hip, so these are angles off vertical.
-   They are negative because the figure faces right and SVG rotates clockwise:
-   a positive angle would throw the boot out behind him. It cocks back under
-   the body, swings through about ninety degrees to meet the ball at hip
-   height, and carries on past it. Contact is at 20%, where the flash, the
-   recoil and the ball's own timeline all meet.
-*/
-@keyframes wcl-leg {
-  0%   { transform: rotate(16deg); }
-  10%  { transform: rotate(40deg); }
-  20%  { transform: rotate(-74deg); }
-  26%  { transform: rotate(-94deg); }
-  45%  { transform: rotate(-64deg); }
-  100% { transform: rotate(-60deg); }
-}
-
-/* The body leaning into the strike and settling. */
-@keyframes wcl-torso {
-  0%   { transform: rotate(1deg); }
-  10%  { transform: rotate(4deg); }
-  20%  { transform: rotate(-13deg); }
-  30%  { transform: rotate(-10deg); }
-  60%  { transform: rotate(-3deg); }
-  100% { transform: rotate(-2deg); }
-}
-
-@keyframes wcl-flash {
-  0%, 19%  { opacity: 0; }
-  21%      { opacity: 0.5; }
-  30%      { opacity: 0; }
-  100%     { opacity: 0; }
-}
-
-/*
-   The ball coming at the camera.
-
-   An object approaching at a steady speed grows slowly at first and then
-   very fast, so the scale is eased in hard rather than linearly -- that
-   non-linearity is most of what makes it read as distance rather than as
-   something simply getting bigger.
-*/
-@keyframes wcl-ball-fly {
-  /* Dropping in from over the striker's shoulder... */
-  0%       { opacity: 0; transform: translate3d(calc(0.26 * var(--wcl-fig)), calc(-0.8 * var(--wcl-fig)), 0) scale(0.1); }
-  5%       { opacity: 1; transform: translate3d(calc(0.2 * var(--wcl-fig)), calc(-0.58 * var(--wcl-fig)), 0) scale(0.12); }
-  13%      { transform: translate3d(calc(0.1 * var(--wcl-fig)), calc(-0.26 * var(--wcl-fig)), 0) scale(0.15); }
-  /* ...met at hip height, and gone. */
-  20%      { opacity: 1; transform: translate3d(0, 0, 0) scale(0.18); }
-  24%      { transform: translate3d(calc(-0.03 * var(--wcl-fig)), -2vh, 0) scale(0.32); }
-  /* The rise is in vh, not vmin: the ball starts at the striker's feet and
-     has to arrive centred on the frame, and that distance is a share of the
-     viewport's height rather than of its shorter side. */
-  45%      { transform: translate3d(calc(-0.09 * var(--wcl-fig)), -8vh, 0) scale(0.8); }
-  70%      { transform: translate3d(calc(-0.16 * var(--wcl-fig)), -16vh, 0) scale(4.2); }
-  88%      { transform: translate3d(calc(-0.2 * var(--wcl-fig)), -22vh, 0) scale(16); }
-  100%     { opacity: 1; transform: translate3d(calc(-0.215 * var(--wcl-fig)), -25vh, 0) scale(34); }
-}
-
-@keyframes wcl-ball-spin {
-  0%   { transform: rotate(-14deg); }
-  100% { transform: rotate(128deg); }
-}
-
-@keyframes wcl-ball-blur {
-  0%, 21% { filter: blur(0px); }
-  38%     { filter: blur(2.4px); }
-  62%     { filter: blur(3.4px); }
-  82%     { filter: blur(1.1px); }
-  92%     { filter: blur(0px); }
-  100%    { filter: blur(0px); }
-}
-
-/* The trail the ball drags out of the dark behind it. */
-@keyframes wcl-trail {
-  0%, 20% { opacity: 0; transform: translate3d(0, 0, 0) scale(0.2); }
-  40%     { opacity: 0.45; transform: translate3d(calc(-0.09 * var(--wcl-fig)), -8vh, 0) scale(1.1); }
-  72%     { opacity: 0.28; transform: translate3d(calc(-0.16 * var(--wcl-fig)), -16vh, 0) scale(2.4); }
-  100%    { opacity: 0; transform: translate3d(calc(-0.215 * var(--wcl-fig)), -24vh, 0) scale(4); }
-}
-
-/* Ball fills the frame -> the site's own deep green takes over. */
-@keyframes wcl-wash {
-  0%, 76% { opacity: 0; }
-  90%     { opacity: 1; }
-  100%    { opacity: 1; }
-}
-
-/*
-   The strike point is derived, not typed in.
-
-   The figure is a square SVG sized in vmin, so the boot arrives at a fixed
-   fraction of that box: 0.915 across and 0.631 down, which falls straight out
-   of the hip position and the swing angle. Anchoring the ball to those
-   fractions keeps boot and ball together on any screen -- hand-tuned
-   percentages held on a phone and drifted apart on a laptop, because the
-   figure is measured in vmin and `bottom` in viewport height.
-*/
 .wcl-intro {
-  --wcl-fig: 54vmin;          /* figure width, and height: the viewBox is square */
-  --wcl-fig-bottom: 21%;      /* where the figure stands */
-  --wcl-strike-x: calc(50% + 0.215 * var(--wcl-fig));
-  --wcl-strike-y: calc(var(--wcl-fig-bottom) + 0.369 * var(--wcl-fig));
+  /* The ball sits dead centre and only grows: "towards the lens" is size,
+     not direction, so a straight approach needs no translation at all. */
+  --wcl-ball: 46vmin;              /* size at scale 1; it ends far past this */
   position: fixed;
   inset: 0;
   z-index: 90;
@@ -464,8 +330,28 @@ body {
 
 /* Nothing scrolls while the titles are up, and it un-sticks by itself when
    the element leaves the DOM -- no JavaScript holding a lock open. */
-body:has(.wcl-intro) {
+body:has(.wcl-intro:not([data-expired]):not([data-seen])) {
   overflow: hidden;
+}
+
+/*
+   The escape hatch, set by the inline script in the overlay when it has
+   outstayed its welcome. Everything keyed on the overlay's presence is keyed
+   on it *not* being expired, so a page whose JavaScript never arrives still
+   ends up with a usable site rather than a black sheet over it.
+*/
+.wcl-intro[data-expired] {
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+/*
+   Already seen this visit. `display: none` rather than a fade: it must never
+   paint at all, or every refresh after the first would flash the first frame
+   of the titles before taking them away again.
+*/
+.wcl-intro[data-seen] {
+  display: none !important;
 }
 
 /*
@@ -474,10 +360,32 @@ body:has(.wcl-intro) {
    Removing the overlay resumes them untouched -- same animations, same
    timings, just started later.
 */
-body:has(.wcl-intro) .animate-rise,
-body:has(.wcl-intro) .animate-fade,
-body:has(.wcl-intro) .animate-score {
+body:has(.wcl-intro:not([data-expired]):not([data-seen])) .animate-rise,
+body:has(.wcl-intro:not([data-expired]):not([data-seen])) .animate-fade,
+body:has(.wcl-intro:not([data-expired]):not([data-seen])) .animate-score {
   animation-play-state: paused;
+}
+
+@keyframes wcl-intro-out {
+  0%, 94% { opacity: 1; }
+  100%    { opacity: 0; }
+}
+
+/* Motion drives this one; it stays empty in CSS so the two never collide. */
+.wcl-intro__recoil {
+  position: absolute;
+  inset: 0;
+  transform-origin: 50% 50%;
+  will-change: transform;
+}
+
+/* The frame taking the hit. Two frames of it, no more. */
+@keyframes wcl-shake {
+  0%, 72%   { transform: translate3d(0, 0, 0); }
+  76%       { transform: translate3d(-0.8%, 1%, 0); }
+  81%       { transform: translate3d(0.7%, -0.7%, 0); }
+  86%       { transform: translate3d(-0.3%, 0.35%, 0); }
+  92%, 100% { transform: translate3d(0, 0, 0); }
 }
 
 .wcl-intro__shake {
@@ -487,12 +395,24 @@ body:has(.wcl-intro) .animate-score {
   will-change: transform;
 }
 
+/* The camera creeping in behind it. */
+@keyframes wcl-scene-push {
+  0%   { transform: scale(1.005); }
+  100% { transform: scale(1.06); }
+}
+
 .wcl-intro__scene {
   position: absolute;
   inset: 0;
-  transform-origin: 50% 68%;
+  transform-origin: 50% 55%;
   animation: wcl-scene-push var(--wcl-intro-dur) cubic-bezier(0.4, 0, 0.5, 1) both;
   will-change: transform;
+}
+
+@keyframes wcl-atmos-in {
+  0%   { opacity: 0; }
+  16%  { opacity: 1; }
+  100% { opacity: 1; }
 }
 
 /* Night sky over a lit ground. */
@@ -505,12 +425,8 @@ body:has(.wcl-intro) .animate-score {
   animation: wcl-atmos-in var(--wcl-intro-dur) ease-out both;
 }
 
-/*
-   Turf, catching the light.
-
-   Masked off at the top rather than given a top edge: a hard line across the
-   frame reads as two flat panels, and the whole point of the shot is depth.
-*/
+/* Turf, masked in at the top: a hard line across the frame reads as two
+   flat panels, and the whole point of the shot is depth. */
 .wcl-intro__ground {
   position: absolute;
   inset: 46% 0 0 0;
@@ -522,7 +438,7 @@ body:has(.wcl-intro) .animate-score {
   animation: wcl-atmos-in var(--wcl-intro-dur) ease-out both;
 }
 
-/* Mown stripes, only just visible, running away from the camera. */
+/* Mown stripes running away from the camera. */
 .wcl-intro__stripes {
   position: absolute;
   inset: 52% -30% -10% -30%;
@@ -537,6 +453,15 @@ body:has(.wcl-intro) .animate-score {
   mask-image: linear-gradient(180deg, transparent 0%, #000 30%, #000 70%, transparent 100%);
   opacity: 0.55;
   animation: wcl-atmos-in var(--wcl-intro-dur) ease-out both;
+}
+
+/* Floodlights finding their level, then blown out by the impact. */
+@keyframes wcl-flood {
+  0%   { opacity: 0; }
+  20%  { opacity: 0.5; }
+  62%  { opacity: 0.44; }
+  76%  { opacity: 0.8; }
+  100% { opacity: 0; }
 }
 
 .wcl-intro__flood {
@@ -555,79 +480,67 @@ body:has(.wcl-intro) .animate-score {
 .wcl-intro__flood--l { left: -16%; transform: rotate(-11deg); }
 .wcl-intro__flood--r { right: -16%; transform: rotate(11deg); }
 
-/* The glow the figure is read against. */
+/* The light the ball comes out of, dead centre. */
 .wcl-intro__backlight {
   position: absolute;
   left: 50%;
-  top: 46%;
-  width: 52vmin;
-  height: 52vmin;
-  transform: translate(-50%, -50%);
+  top: 50%;
+  width: 70vmin;
+  height: 70vmin;
+  margin: -35vmin 0 0 -35vmin;
   background: radial-gradient(
     50% 50% at 50% 50%,
-    color-mix(in srgb, var(--color-pitch) 26%, transparent) 0%,
-    color-mix(in srgb, var(--color-pitch-deep) 13%, transparent) 38%,
-    transparent 68%
+    color-mix(in srgb, var(--color-pitch) 30%, transparent) 0%,
+    color-mix(in srgb, var(--color-pitch-deep) 15%, transparent) 40%,
+    transparent 70%
   );
   animation: wcl-flood var(--wcl-intro-dur) ease-out both;
 }
 
 /*
-   The figure stands just left of centre with its kicking foot on the middle
-   of the frame, which is where the ball sits -- so the strike happens dead
-   centre and the ball comes straight down the lens.
+   The approach.
+
+   An object coming at a steady speed grows slowly and then very fast, so the
+   scale is eased in hard rather than linearly. That non-linearity is most of
+   what makes it read as distance closing rather than as something simply
+   getting bigger.
 */
-.wcl-intro__figure {
-  position: absolute;
-  left: 50%;
-  bottom: var(--wcl-fig-bottom);
-  width: var(--wcl-fig);
-  height: auto;
-  animation: wcl-figure-in var(--wcl-intro-dur) var(--ease-out-expo) both;
-  will-change: opacity, transform;
+@keyframes wcl-ball-fly {
+  0%   { opacity: 0; transform: scale(0.03); }
+  8%   { opacity: 1; transform: scale(0.05); }
+  26%  { transform: scale(0.14); }
+  44%  { transform: scale(0.42); }
+  58%  { transform: scale(1.1); }
+  68%  { transform: scale(2.8); }
+  74%  { transform: scale(4.8); }   /* the frame is covered: this is the hit */
+  86%  { transform: scale(8.5); }
+  100% { transform: scale(15); }
 }
 
-.wcl-intro__torso {
-  transform-box: view-box;
-  transform-origin: 148px 168px;
-  animation: wcl-torso var(--wcl-intro-dur) cubic-bezier(0.3, 0, 0.2, 1) both;
+@keyframes wcl-ball-spin {
+  0%   { transform: rotate(-18deg); }
+  100% { transform: rotate(96deg); }
 }
 
-.wcl-intro__stand {
-  transform-box: view-box;
-}
-
-.wcl-intro__leg {
-  transform-box: view-box;
-  transform-origin: 160px 164px;
-  animation: wcl-leg var(--wcl-intro-dur) cubic-bezier(0.22, 0.9, 0.2, 1) both;
-}
-
-.wcl-intro__flash {
-  position: absolute;
-  left: var(--wcl-strike-x);
-  bottom: calc(var(--wcl-strike-y) - 19vmin);
-  width: 38vmin;
-  height: 38vmin;
-  margin-left: -19vmin;
-  background: radial-gradient(
-    50% 50% at 50% 50%,
-    color-mix(in srgb, var(--color-pitch-bright) 55%, transparent) 0%,
-    color-mix(in srgb, var(--color-pitch) 18%, transparent) 30%,
-    transparent 62%
-  );
-  animation: wcl-flash var(--wcl-intro-dur) ease-out both;
+/* Motion blur, only while it is quickest, and gone before it is big. */
+@keyframes wcl-ball-blur {
+  0%, 18% { filter: blur(0px); }
+  42%     { filter: blur(2.8px); }
+  62%     { filter: blur(3.4px); }
+  76%     { filter: blur(1.2px); }
+  88%     { filter: blur(0px); }
+  100%    { filter: blur(0px); }
 }
 
 .wcl-intro__ball {
   position: absolute;
-  left: var(--wcl-strike-x);
-  bottom: calc(var(--wcl-strike-y) - 6.5vmin);
-  width: 13vmin;
-  aspect-ratio: 1;
-  margin-left: -6.5vmin;
+  left: 50%;
+  top: 50%;
+  width: var(--wcl-ball);
+  height: var(--wcl-ball);
+  margin: calc(var(--wcl-ball) / -2) 0 0 calc(var(--wcl-ball) / -2);
   transform-origin: 50% 50%;
-  animation: wcl-ball-fly var(--wcl-intro-dur) cubic-bezier(0.5, 0, 0.78, 0.36) both;
+  animation: wcl-ball-fly var(--wcl-intro-dur) cubic-bezier(0.55, 0, 0.85, 0.4) both;
   will-change: transform;
 }
 
@@ -640,20 +553,112 @@ body:has(.wcl-intro) .animate-score {
   will-change: transform, filter;
 }
 
+/* The wake it drags out of the dark behind it. */
+@keyframes wcl-trail {
+  0%, 14% { opacity: 0; transform: scale(0.2); }
+  44%     { opacity: 0.4; transform: scale(0.9); }
+  70%     { opacity: 0.3; transform: scale(2.2); }
+  100%    { opacity: 0; transform: scale(5); }
+}
+
 .wcl-intro__trail {
   position: absolute;
-  left: var(--wcl-strike-x);
-  bottom: calc(var(--wcl-strike-y) - 12vmin);
-  width: 24vmin;
-  height: 24vmin;
-  margin-left: -12vmin;
+  left: 50%;
+  top: 50%;
+  width: 70vmin;
+  height: 70vmin;
+  margin: -35vmin 0 0 -35vmin;
   transform-origin: 50% 50%;
   background: radial-gradient(
     50% 50% at 50% 50%,
-    color-mix(in srgb, var(--color-pitch) 26%, transparent) 0%,
+    color-mix(in srgb, var(--color-pitch) 24%, transparent) 0%,
     transparent 66%
   );
-  animation: wcl-trail var(--wcl-intro-dur) cubic-bezier(0.5, 0, 0.78, 0.36) both;
+  animation: wcl-trail var(--wcl-intro-dur) cubic-bezier(0.55, 0, 0.85, 0.4) both;
+}
+
+/* The hit. */
+@keyframes wcl-flash {
+  0%, 70%  { opacity: 0; }
+  75%      { opacity: 0.62; }
+  87%      { opacity: 0; }
+  100%     { opacity: 0; }
+}
+
+.wcl-intro__flash {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    60% 60% at 50% 50%,
+    color-mix(in srgb, var(--color-pitch-bright) 62%, transparent) 0%,
+    color-mix(in srgb, var(--color-pitch) 22%, transparent) 34%,
+    transparent 68%
+  );
+  animation: wcl-flash var(--wcl-intro-dur) ease-out both;
+}
+
+/* Ball fills the frame -> the site's own deep green takes over. */
+@keyframes wcl-wash {
+  0%, 66% { opacity: 0; }
+  86%     { opacity: 1; }
+  100%    { opacity: 1; }
+}
+
+/*
+   The clip.
+
+   `cover` rather than `contain`: a letterboxed strip inside a full-screen
+   overlay reads as a bug, and the clip is composed centrally enough to take
+   the crop. It is muted and inline because no browser will autoplay
+   otherwise, and it sits under the wash so the hand-off into the page is the
+   same green fade the drawn version uses.
+
+   The clip is shown whole and untouched -- the source is watermark-free, so
+   nothing has to be scaled out of frame or covered over.
+*/
+.wcl-intro__film {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  background: var(--color-ink);
+}
+
+
+
+/*
+   Portrait needs its own framing.
+
+   The clip is 2.36:1; on a phone held upright, `cover` shows about a fifth of
+   its width, and centred that fifth is a pair of shorts -- the ball and the
+   boot sit left of centre and fall out of frame. Biasing object-position to
+   where the action actually is puts them back. No scale is needed here: the
+   watermark lives in the bottom-right corner, which this crop has already
+   thrown away.
+*/
+/*
+   Upright, the clip needs its own framing.
+
+   It is 2.36:1, so on a phone held vertically `cover` shows about a fifth of
+   its width -- and centred, that fifth is a pair of shorts. The ball and the
+   boot sit left of centre, so the crop is biased to where the action is.
+   Nothing is scaled: this is only choosing which part of a wide frame a tall
+   screen gets to see.
+*/
+@media (max-aspect-ratio: 1 / 1) {
+  .wcl-intro__film { object-position: 37% 50%; }
+}
+
+
+/* The clip runs its own light; the green only arrives at the very end. */
+.wcl-intro[data-mode='film'] .wcl-intro__wash {
+  animation-name: wcl-wash-film;
+}
+
+@keyframes wcl-wash-film {
+  0%, 88% { opacity: 0; }
+  100%    { opacity: 1; }
 }
 
 .wcl-intro__wash {
@@ -663,9 +668,8 @@ body:has(.wcl-intro) .animate-score {
   animation: wcl-wash var(--wcl-intro-dur) cubic-bezier(0.5, 0, 0.6, 1) both;
 }
 
-/* A phone does not need the widest floodlights or the biggest blur. */
 @media (max-width: 30rem) {
-  .wcl-intro { --wcl-fig: 62vmin; --wcl-fig-bottom: 23%; }
+  .wcl-intro { --wcl-ball: 54vmin; }
 }
 
 /*
