@@ -86,9 +86,9 @@ const squadOf = (teamId: string) => players.filter((p) => p.team_id === teamId);
 const byId = new Map(teams.map((t) => [t.id, t]));
 
 describe('the WCL roster', () => {
-  it('has twelve teams and one hundred and five players', () => {
+  it('has twelve teams and one hundred and seven players', () => {
     expect(teams).toHaveLength(12);
-    expect(players).toHaveLength(105);
+    expect(players).toHaveLength(107);
   });
 
   it('splits six teams into each group', () => {
