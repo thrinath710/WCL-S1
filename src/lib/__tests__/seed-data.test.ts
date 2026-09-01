@@ -194,14 +194,32 @@ describe('the group schedule', () => {
     expect(times).toEqual(['6:00 pm', '6:30 pm', '7:00 pm', '7:30 pm', '8:00 pm', '8:30 pm', '9:00 pm', '9:30 pm']);
   });
 
-  it('uses Court 1 only for the 9:00 and 9:30 slots', () => {
+  it('keeps every match on one of the two courts, and records where Court 1 is used', () => {
     for (const match of matches) {
-      const late = ['9:00 pm', '9:30 pm'].includes(formatTime(match.kickoff_at));
-      if (match.pitch === 'Court 1') expect(late, match.id).toBe(true);
-      else expect(match.pitch).toBe('Court 2');
+      expect(['Court 1', 'Court 2'], match.id).toContain(match.pitch);
     }
-    // and there is one Court 1 match in each of those six slots
-    expect(matches.filter((m) => m.pitch === 'Court 1')).toHaveLength(6);
+
+    /*
+       This used to assert "Court 1 only for the 9:00 and 9:30 slots", which is
+       what the printed sheet said. Tuesday was rescheduled on 1 September and
+       the court fields were deliberately left alone, which moved a Court 1 tie
+       to 6:30 -- so that rule no longer holds. Rather than drop the check, it
+       now pins down exactly where Court 1 is used, which still catches a court
+       moving by accident.
+    */
+    const onCourtOne = matches
+      .filter((m) => m.pitch === 'Court 1')
+      .map((m) => `${dayKey(m.kickoff_at)} ${formatTime(m.kickoff_at)}`)
+      .sort();
+
+    expect(onCourtOne).toEqual([
+      '2026-08-31 9:00 pm',
+      '2026-08-31 9:30 pm',
+      '2026-09-01 6:30 pm',   // moved here by the 1 September reschedule
+      '2026-09-01 9:00 pm',
+      '2026-09-02 9:00 pm',
+      '2026-09-02 9:30 pm',
+    ]);
   });
 
   it('never asks a team to wear both kits on the same night', () => {
