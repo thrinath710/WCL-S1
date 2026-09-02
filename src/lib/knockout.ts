@@ -10,10 +10,13 @@
 import { byKickoff, matchWinner, type GroupStandings } from './standings';
 import { type Match, isCounted } from './types';
 
-/** Kickoff times for the knockout evening, as printed on the fixture sheet. */
-export const SEMI_ONE_TIME = '19:00';
-export const SEMI_TWO_TIME = '19:40';
-export const FINAL_TIME = '20:45';
+/**
+ * Kickoff times for the knockout evening. Revised from the printed sheet:
+ * semi-finals at 6:30 and 7:15, final at 8:30.
+ */
+export const SEMI_ONE_TIME = '18:30';
+export const SEMI_TWO_TIME = '19:15';
+export const FINAL_TIME = '20:30';
 export const KNOCKOUT_PITCH = 'Court 2';
 
 export type PlannedTie = {

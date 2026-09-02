@@ -36,6 +36,10 @@ export function MatchCard({
   const away = teams.get(match.away_team_id);
   const played = isCounted(match);
   const live = match.status === 'live';
+  /* Semi-finals and the final are marked out in gold, the same treatment the
+     standings table gives a qualifying place, so the knockout reads as the
+     knockout at a glance rather than as one more row of the group stage. */
+  const knockout = isKnockout(match.stage);
   const hasPens = match.home_pens != null && match.away_pens != null;
 
   // matchWinner accounts for a shootout, so a team that went through on
@@ -48,17 +52,26 @@ export function MatchCard({
       href={`/match/${match.id}`}
       style={{ '--i': index } as React.CSSProperties}
       className={`animate-rise stagger group relative block cursor-pointer border-b border-line px-3.5 py-3.5 transition-colors duration-200 last:border-b-0 hover:bg-surface-2/70 sm:px-4 ${
-        live ? 'bg-live/[0.05]' : ''
+        live ? 'bg-live/[0.05]' : knockout ? 'bg-gold-glow' : ''
       }`}
     >
-      {live ? (
-        <span aria-hidden className="absolute inset-y-0 left-0 w-[3px] bg-live" />
+      {/* A live match keeps the red bar: being on right now outranks the round. */}
+      {live || knockout ? (
+        <span
+          aria-hidden
+          className={`absolute inset-y-0 left-0 w-[3px] ${live ? 'bg-live' : 'bg-gold'}`}
+        />
       ) : null}
 
       <div className="mb-2.5 flex items-center gap-1.5 text-[0.68rem] text-faint">
         <MetaLine
           parts={[
-            <span key="stage" className="font-bold uppercase tracking-[0.09em] text-muted">
+            <span
+              key="stage"
+              className={`font-bold uppercase tracking-[0.09em] ${
+                knockout ? 'text-gold' : 'text-muted'
+              }`}
+            >
               {stageTag(match)}
             </span>,
             showDate ? (
