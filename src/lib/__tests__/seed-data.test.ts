@@ -213,12 +213,20 @@ describe('the group schedule', () => {
       .sort();
 
     expect(onCourtOne).toEqual([
+      // Monday and Tuesday: Court 1 is the overflow for the late double slots
       '2026-08-31 9:00 pm',
       '2026-08-31 9:30 pm',
       '2026-09-01 6:30 pm',   // moved here by the 1 September reschedule
       '2026-09-01 9:00 pm',
-      '2026-09-02 8:30 pm',   // and these two by the 2 September reschedule
+      // Wednesday inverts it: Court 1 is the main court all evening
+      '2026-09-02 6:00 pm',
+      '2026-09-02 6:30 pm',
+      '2026-09-02 7:00 pm',
+      '2026-09-02 7:30 pm',
+      '2026-09-02 8:00 pm',
+      '2026-09-02 8:30 pm',
       '2026-09-02 9:00 pm',
+      '2026-09-02 9:30 pm',
     ]);
   });
 
