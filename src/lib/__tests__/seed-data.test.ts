@@ -217,8 +217,8 @@ describe('the group schedule', () => {
       '2026-08-31 9:30 pm',
       '2026-09-01 6:30 pm',   // moved here by the 1 September reschedule
       '2026-09-01 9:00 pm',
+      '2026-09-02 8:30 pm',   // and these two by the 2 September reschedule
       '2026-09-02 9:00 pm',
-      '2026-09-02 9:30 pm',
     ]);
   });
 
